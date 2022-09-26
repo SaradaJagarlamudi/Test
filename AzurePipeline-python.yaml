@@ -1,0 +1,36 @@
+trigger: 
+ branches:
+   include:
+     - master
+pool:
+  vmImage: windows-latest
+  
+steps:
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '3.x'
+    addToPath: true
+    architecture: 'x64'
+
+- task: Bash@3
+  inputs:
+    targetType: 'inline'
+    script: |
+      python -m venv antenv
+      source antenv/bin/activate
+      python -m pip install --upgrade pip
+      pip install setup
+      pip install -r requirements.txt
+- task: ArchiveFiles@2
+  inputs:
+    rootFolderOrFile: '$(Build.SourcesDirectory)'
+    includeRootFolder: true
+    archiveType: 'zip'
+    archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
+    replaceExistingArchive: true
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    ArtifactName: 'drop'
+    publishLocation: 'Container'
